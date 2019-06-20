@@ -1,0 +1,17 @@
+{
+  "extends": ["wesbos"],
+  "rules": {
+    "no-console": 1,
+    "no-unused-vars": 1,
+    "object-curly-spacing": 2,
+    "prettier/prettier": [
+      "error",
+      {
+        "trailingComma": "es5",
+        "singleQuote": true,
+        "printWidth": 120,
+        "tabWidth": 8
+      }
+    ]
+  }
+}
