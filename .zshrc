@@ -1,7 +1,9 @@
 # If you come from bash you might have to change your $PATH.
 #export PATH="$PATH:$HOME/bin"
-export PATH="$HOME/.npm-packages/bin:$PATH"
-
+export PATH="/usr/local/bin:$PATH:$HOME/.npm-packages/bin:$PATH:/usr/local/bin/mysql"
+# export PATH="/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
+export PATH="$PATH:$HOME/.composer/vendor/bin"
+# export PATH="$HOME/.npm-packages/bin:$PATH:$PATH:$HOME/.composer/vendor/bin:$PATH:/usr/local/mysql/bin"
 # export PATH="/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin"
 # Path to your oh-my-zsh installation.
 export ZSH="/Users/mjames/.oh-my-zsh"
@@ -99,6 +101,61 @@ source $ZSH/oh-my-zsh.sh
 # Example aliases
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
+# alias composer="php /usr/local/bin/composer.phar"
+alias magedeploy="php bin/magento setup:static-content:deploy -f"
+alias mageclean="php bin/magento cache:flush"
+alias mageupgrade="php bin/magento setup:upgrade"
+alias magenuke="rm -rf  ~/sites/scrubs/scrubs.local/generated/*"
+alias magebuild="magenuke && mageclean && magedeploy"
+
+download_latest_dbs(){
+    NOW=$(date +"%Y%m%d")
+    BAK="${HOME}/tmp/DBS/${NOW}"
+    if [ ! -d $BAK ]; then
+      mkdir -p $BAK
+    fi
+    cd $BAK
+    ssh sab-m2-prod-cron "ls -Art ~/db_dumps/*.sql.gz | tail -n 2" | xargs -I {} scp "sab-m2-prod-cron:{}" .
+
+}
+download_latest_feeds(){
+    NOW=$(date +"%Y%m%d")
+    BAK="${HOME}/tmp/GOOGLEFEEDS"
+    if [ ! -d $BAK ]; then
+      mkdir -p $BAK
+    fi
+    cd $BAK
+
+    scp -r "sab-m2-prod-cron:~/m2/var/export/*.csv" .
+    tar -czf "${NOW}_latest.tbz" *.csv
+}
+download_latest_pmg () {
+    BASE_DIR='~/m2/var/import/erp/'
+    DIRS=(inventory_feed pricing_feed product_attribute_feed)
+    ARCHIVE='/archive/'
+    TMP_DIR='erp_dir'
+    LATEST_COMMAND="ls -Art ${TMP_DIR} | tail -n 1"
+    for DIR in ${DIRS[@]}
+    do
+        FULL_DIR="${BASE_DIR}${DIR}${ARCHIVE}"
+        echo -n "WORKING WITH ${FULL_DIR}"
+        ssh sab-m2-prod-admin "${LATEST_COMMAND/${TMP_DIR}/$FULL_DIR}" | xargs -I {} scp "sab-m2-prod-admin:${FULL_DIR}/{}" .
+    done
+
+}
+startGrunt() {
+  mageupgrade
+  grunt exec:sab
+  magedeploy
+  mageclean
+  grunt watch
+}
+gitNuke() {
+  git fetch -p origin
+  git fsck --full --strict
+  git reflog expire --expire=now --all
+  git gc --prune=now
+}
 # prompt_context() {
 #   # Custom (Random emoji)
 #   emojis=("⚡️" "🔥" "💀" "👑" "😎" "🐸" "🐵" "🦄" "🌈" "🍻" "🚀" "💡" "🎉" "🔑" "🇹🇭" "🚦" "🌙")
@@ -107,6 +164,10 @@ source $ZSH/oh-my-zsh.sh
 # }
 prompt_context() {
   if [[ "$USER" != "$DEFAULT_USER" || -n "$SSH_CLIENT" ]]; then
-    prompt_segment black default "%(!.%{%F{yellow}%}.)🎸"
+    prompt_segment black default "%(!.%{%F{yellow}%}.)🚀"
   fi
 }
+export PATH="/usr/local/sbin:$PATH"
+export PATH="/usr/local/opt/valet-php@7.1/bin:$PATH"
+export PATH="/usr/local/opt/valet-php@7.1/sbin:$PATH"
+export PATH="/usr/local/opt/mysql@5.7/bin:$PATH"

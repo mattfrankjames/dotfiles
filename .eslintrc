@@ -1,5 +1,5 @@
 {
-  "extends": ["wesbos"],
+  "extends": ["eslint:recommended"],
   "rules": {
     "no-console": 1,
     "no-unused-vars": 1,
@@ -9,8 +9,7 @@
       {
         "trailingComma": "es5",
         "singleQuote": true,
-        "printWidth": 120,
-        "tabWidth": 8
+        "printWidth": 120
       }
     ]
   }
